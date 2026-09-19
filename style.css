@@ -1,0 +1,515 @@
+/* 配色取自已验证的深色实例：底面 #0d0d0d，数据色阶 #a87a18 → #f2d98c */
+:root{
+  --surface:#0d0d0d;
+  --card:#1a1a19;
+  --ink:#ffffff;
+  --ink-2:#c3c2b7;
+  --muted:#898781;
+  --rule:#2c2c2a;
+  --base:#383835;
+  --lo:#a87a18;      /* 顺序色阶·低 */
+  --hi:#f2d98c;      /* 顺序色阶·高 */
+  --metal:#5a5750;   /* 表冠金属 */
+  /* 楷体栈（退化顺序 楷体 → 宋体 → 系统衬线）。用在所有「字」上——四柱、卦名。
+     ⚠ 用它的地方**不要写 font-weight**：楷体、宋体都只有一个字重，
+     写 600 会被浏览器**伪粗**，笔画糊成一坨。 */
+  --kai:"KaiTi","STKaiti","楷体","Kaiti SC","Songti SC","SimSun","Noto Serif SC",serif;
+  --screen-w:408px;
+  --screen-h:480px;
+  --bezel:26px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:radial-gradient(circle at 50% 34%,#161616,#000 70%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  font:400 14px/1.4 system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  color:var(--ink);padding:24px;overflow:hidden;
+}
+
+/* ══ 3D 舞台 ══ */
+.stage{perspective:1500px;perspective-origin:50% 45%}
+.watch{
+  position:relative;transform-style:preserve-3d;
+  transition:transform .45s cubic-bezier(.22,.9,.28,1);
+  cursor:grab;
+}
+.watch.dragging{cursor:grabbing;transition:none}
+.watch.spin{transition:transform .45s cubic-bezier(.22,.9,.28,1)}
+
+/* 表体厚度：N 层同形圆角矩形沿 Z 轴叠出实体感 */
+.layers{position:absolute;inset:0;transform-style:preserve-3d;pointer-events:none}
+.layers i{position:absolute;inset:0;display:block;border-radius:60px}
+/* 背面。类名不能叫 .back —— 会和页头返回键 .back 撞名 */
+.shell-back{position:absolute;inset:0;border-radius:60px;background:#0a0a0a;pointer-events:none}
+
+/* 正面：表壳 + 屏幕 */
+.case{
+  position:relative;padding:var(--bezel);border-radius:60px;
+  background:linear-gradient(150deg,#35332e,#1a1a19 42%,#26241f);
+  box-shadow:0 0 0 1px rgba(255,255,255,.10), inset 0 1px 0 rgba(255,255,255,.12);
+  transform-style:preserve-3d;
+}
+.screen{
+  width:var(--screen-w);height:var(--screen-h);
+  background:var(--surface);border-radius:36px;overflow:hidden;position:relative;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07), inset 0 0 40px rgba(0,0,0,.9);
+}
+
+/* 表冠 */
+.crown{
+  position:absolute;right:-13px;top:132px;width:13px;height:58px;
+  border-radius:0 7px 7px 0;cursor:ns-resize;
+  background:
+    repeating-linear-gradient(180deg,rgba(0,0,0,.45) 0 2px,transparent 2px 4px),
+    linear-gradient(90deg,#2e2c27,#8a857a 45%,#4a4740);
+  box-shadow:1px 0 6px rgba(0,0,0,.7), inset 0 0 0 1px rgba(255,255,255,.15);
+  transform:translateZ(11px);
+}
+.crown:active{background:linear-gradient(90deg,#3a3833,#b0aa9c 45%,#5a5750)}
+.crown::after{ /* 表冠顶帽 */
+  content:"";position:absolute;right:100%;top:2px;bottom:2px;width:5px;
+  border-radius:6px 0 0 6px;background:linear-gradient(90deg,#151514,#57544c);
+}
+
+/* ══ 页面 ══ */
+.page{position:absolute;inset:0;display:none;flex-direction:column}
+.page.active{display:flex}
+
+.bar{height:52px;flex:none;display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:1px solid var(--rule)}
+.bar-title{font-size:16px;font-weight:600;letter-spacing:.06em}
+.bar-sub{margin-left:auto;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.back,.info{
+  width:34px;height:34px;flex:none;border:0;border-radius:50%;background:var(--card);
+  color:var(--ink-2);font-size:20px;line-height:1;cursor:pointer;
+}
+.info{margin-left:auto;font:600 15px/1 Georgia,serif;letter-spacing:0}
+.back:active,.info:active{background:var(--base)}
+.bar-sub+.info{margin-left:10px}
+
+.body{flex:1;overflow-y:auto;padding:14px 16px 16px;scrollbar-width:none;overscroll-behavior:contain}
+.body::-webkit-scrollbar{display:none}
+
+/* ══ 首页 ══ */
+/* 左右内边距给四柱让路（14 → 8）：四柱是全页的主角，宁可它比底下的卡片宽一点。
+   底下的 .menu 仍是 20px 内边距，正好让四柱显得像一条通栏的题头。 */
+.now{padding:11px 8px 4px;font-size:12px;color:var(--muted);letter-spacing:.04em}
+.now b{display:block;font-size:26px;color:var(--ink);font-weight:600;letter-spacing:.08em;margin-bottom:4px}
+
+/* 四柱：**一柱竖着写** —— 干在上、支在下，四根柱子并排，底下小字标年月日时。
+   干支横排的「丙午」读起来是一个词，竖起来才叫柱；排盘历来也是竖排的。
+
+   竖排之后**宽度不再是瓶颈**：一列只放一个字，92px 的格宽绰绰有余。
+   卡住字号的是**高度** —— 两行字加一个标签，屏高就这么点。
+   首页 .body 装的是「.now + .menu」两兄弟，菜单占去 260，四柱这块的预算约 100px，
+   两行 42px 正好。想要更大的字**只能从菜单身上抠**，负外边距那套管的是宽度，在这儿没用。
+   ⚠ 行高必须写**固定 px**（42px），不能写 1 / 1.06：日柱比别的柱大 4px，
+   行高要是跟着各自字号走，它一个人就能把整块顶高 8px，四根柱子也会错开基线。 */
+.now .sizhu{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:0 -8px 7px}
+/* 换楷体（退化顺序：楷体 → 宋体 → 系统衬线）。**不要给字重**：
+   楷体、宋体都只有一个字重，写 600 会被浏览器**伪粗**，笔画糊成一坨；
+   42px 的细笔画在 OLED 上本来就是最好看的样子。
+   ⚠ 别拿眼睛跟黑体比大小：同一个字号楷体看着小一圈（墨迹只占 0.79em，雅黑 0.91）。 */
+.now .sizhu b{
+  display:block;
+  font-family:var(--kai);
+  font-size:42px;font-weight:400;line-height:42px;letter-spacing:0;text-align:center;margin:0;
+}
+/* ⚠ 必须写成 `> div > span`，不能图省事写 `.sizhu span`。
+   干支两个字是包在 <b> 里的 `<span class="wx-火">丙</span>`，
+   而「年/月/日/时」标签是 <b> 的**兄弟**。写后代选择器两者一起命中，
+   于是八个字被按 11px、一个字一行渲染 —— 而且 <b> 的 font-size 照样是 46px，
+   量 computed style 完全看不出问题，只有量 offsetHeight（恒定 24px）才露馅。
+   这个坑连着踩了两轮：上一轮给它加 !important 只救了颜色，display/font-size 还在。 */
+.now .sizhu > div > span{display:block;font-size:11px;line-height:13px;color:var(--muted);text-align:center;margin-top:3px;letter-spacing:.22em;text-indent:.22em}
+/* 日柱＝日主，四柱里唯一再重一档的：字大四格，**行高仍是上面那个 42px**，
+   所以整块高度一动不动，四根柱子也照样齐。只动这一处 —— 满屏都强调等于没强调。 */
+.now .sizhu .rizhu b{font-size:46px}
+.now .sizhu .rizhu > span{color:var(--hi)}
+.menu{display:flex;flex-direction:column;gap:10px;padding:7px 20px}
+.entry{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:14px 18px;border:1px solid var(--rule);border-radius:18px;background:var(--card);color:var(--ink);cursor:pointer;text-align:left}
+.entry:active{background:var(--base);border-color:var(--base)}
+.entry b{font-size:17px;font-weight:600;letter-spacing:.08em}
+.entry i{font-style:normal;font-size:11px;color:var(--muted)}
+
+/* ══ 掷卦 ══ */
+/* 摇卦页：卦堆在上、铜钱与按钮在下。整页至少占满一屏，
+   但要已经垒了三五爻时也不能把铜钱挤出屏幕 —— 故用 min-height 而非 height。 */
+.toss-page{min-height:100%;display:flex;flex-direction:column}
+.toss-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:14px 0 4px}
+.toss{width:148px;height:148px;border-radius:50%;border:1px solid var(--lo);background:radial-gradient(circle at 50% 40%,#2a2110,#141208);color:var(--hi);font-size:20px;font-weight:600;letter-spacing:.3em;text-indent:.3em;cursor:pointer}
+.toss:active{transform:scale(.97)}
+/* 已经垒了爻就收紧：卦堆占掉大半屏，摇卦键再占 148px 就得滚着按 */
+.toss-wrap.compact{gap:11px;padding-top:10px}
+.toss-wrap.compact .toss{width:112px;height:112px;font-size:17px}
+.toss-wrap.compact .shake{height:54px}
+.toss-wrap.compact .coin{width:46px;height:46px}
+.toss-wrap.compact .stalks i{height:44px}
+.hint{font-size:11px;color:var(--muted);letter-spacing:.06em;line-height:1.7}
+
+/* ══ 摇卦：方孔圆钱 / 蓍草 ══
+   纯 CSS 画的，没有素材文件。铜钱是**真的两片**：正面「乾隆通宝」、背面素面，
+   两片预先差 180°，靠 backface-visibility 各露一面。这样转起来才是在翻硬币，
+   而不是一张贴图在原地打转 —— 转到 90° 时它真的会侧过去变成一条线。
+   .shake 上的 perspective 就是这个 3D 的取景点，少了它翻转会退化成横向缩放。 */
+.shake{display:flex;align-items:center;justify-content:center;gap:16px;height:62px;perspective:460px}
+.coin{
+  position:relative;width:54px;height:54px;
+  transform-style:preserve-3d;
+  transition:transform .5s cubic-bezier(.22,.9,.28,1);
+}
+/* 两片同形圆碟。铜色别压太暗：四个字要压在金属面上，底缘一黑字就糊了。 */
+.coin .cf,.coin .cb{
+  position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;
+  background:radial-gradient(circle at 34% 28%,#f7e6ad,#c99a2e 48%,#8a6415);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.28),0 2px 7px rgba(0,0,0,.65);
+}
+/* 背面：素面，光从另一侧来，免得两面看着是同一张脸 */
+.coin .cb{
+  transform:rotateY(180deg);
+  background:radial-gradient(circle at 64% 30%,#e9d69f,#b98d28 52%,#77540f);
+}
+/* 方孔：两面各挖各的 */
+.coin .cf::before,.coin .cb::before{
+  content:"";position:absolute;inset:0;margin:auto;width:15px;height:15px;
+  background:var(--surface);box-shadow:inset 0 0 0 1px rgba(0,0,0,.55);
+}
+/* 用继承的字体栈（系统中文），Georgia 没有汉字，回退后的字形反而更虚。
+   注意不能写 font:600 11px/1 inherit —— inherit 是 CSS-wide 关键字，
+   放在 font 简写里当字体名非法，整条声明会被丢掉。 */
+.coin i{
+  position:absolute;font-style:normal;font-weight:600;
+  font-size:11px;line-height:1;color:#2e2005;
+}
+.coin .c0{top:4px;left:50%;transform:translateX(-50%)}      /* 乾 */
+.coin .c1{right:6px;top:50%;transform:translateY(-50%)}      /* 隆 */
+.coin .c2{bottom:4px;left:50%;transform:translateX(-50%)}    /* 通 */
+.coin .c3{left:6px;top:50%;transform:translateY(-50%)}       /* 宝 */
+
+/* 落定停在哪一面：字面朝前 = 没翻过，背面朝前 = 翻过去 180°。
+   停哪面不是随机的，是这一爻真掷出来的（字为阴、背为阳，三背才是老阳）。 */
+.coin.zi{transform:rotateY(0deg)}
+.coin.bei{transform:rotateY(180deg)}
+
+/* 大衍用蓍草，不画铜钱 —— 选了哪套筮法就画哪套 */
+.stalks{display:flex;align-items:center;gap:5px;height:54px}
+.stalks i{width:5px;height:52px;border-radius:3px;
+  background:linear-gradient(180deg,#b09a5e,#5a4d28);box-shadow:0 1px 3px rgba(0,0,0,.5)}
+
+/* 翻硬币：绕 X 轴翻面 + 绕 Y 轴打转 + 上下抛，一周期正好回到原点（360°/720°），
+   所以循环起来是接得上的，不会一顿一顿地跳回开头。 */
+@keyframes coin-tumble{
+  0%  {transform:translateY(0)     rotateX(0deg)   rotateY(0deg)}
+  30% {transform:translateY(-19px) rotateX(150deg) rotateY(200deg)}
+  60% {transform:translateY(2px)   rotateX(300deg) rotateY(430deg)}
+  100%{transform:translateY(0)     rotateX(360deg) rotateY(720deg)}
+}
+@keyframes coin-shake{
+  0%,100%{transform:translateY(0) rotate(0)}
+  25%{transform:translateY(-15px) rotate(-16deg)}
+  50%{transform:translateY(3px) rotate(10deg)}
+  75%{transform:translateY(-8px) rotate(-6deg)}
+}
+.shake.on .coin{animation:coin-tumble .78s linear infinite}
+/* 负延迟：一上来三枚就各在不同的相位，否则起手那一下是齐步走 */
+.shake.on .coin:nth-child(2){animation-delay:-.26s}
+.shake.on .coin:nth-child(3){animation-delay:-.52s}
+.shake.on .stalks i{animation:coin-shake .42s linear infinite}
+.shake.on .stalks i:nth-child(2n){animation-delay:.09s}
+.shake.on .stalks i:nth-child(3n){animation-delay:.17s}
+
+/* ══ 卦盘 ══ */
+.gua-head{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
+/* 卦名也用楷体。**字号、字距一个没动** —— CJK 的步进宽度恒等于字号，换字体不改字宽，
+   行高是 font-size × 1.4 的无单位数、与字体族无关，所以行盒也一样宽高：
+   这一处换完，整页的排版一格没挪。代价只是墨迹小一圈（楷体 0.79em，黑体 0.91em）。 */
+.gua-name{font-family:var(--kai);font-size:19px;font-weight:400;letter-spacing:.06em}
+.gua-meta{font-size:11px;color:var(--muted)}
+.pan{display:flex;flex-direction:column;gap:1px;border-top:1px solid var(--rule);padding-top:8px}
+.row{display:grid;grid-template-columns:28px 32px 30px 1fr 32px;align-items:center;gap:5px;height:34px}
+.row .shen{font-size:10px;color:var(--muted)}
+.row .nj{font-size:11px;color:var(--ink-2)}
+.row .qin{font-size:11px;color:var(--ink-2)}
+.row .mark{font-size:10px;color:var(--ink-2);text-align:right;white-space:nowrap}
+/* 动爻用文字色强调，颜色留给数据本身 */
+.row.dong .nj,.row.dong .qin,.row.dong .mark{color:var(--ink);font-weight:600}
+.row.dong{border-left:2px solid var(--hi);margin-left:-6px;padding-left:4px}
+
+/* 爻符：阳=一整条，阴=两条中间留缺口 */
+.yao{display:flex;gap:6px;height:8px}
+.yao i{flex:1;background:var(--ink);border-radius:1px}
+.yao.ph i{background:var(--rule)}
+
+/* 出卦：六爻一次性进 DOM，节奏全靠 animation-delay，不用 JS 定时器 ——
+   动画期间表冠照样能滚，headless 抓一次 DOM 就拿到完整卦盘。每爻 .42s 一拍。 */
+@keyframes yao-in{from{opacity:0;transform:translateY(-8px) scaleX(.86)}to{opacity:1;transform:none}}
+.pan .row{animation:yao-in .4s cubic-bezier(.2,.8,.3,1) both;animation-delay:calc(var(--i) * .42s)}
+
+/* 动爻落定后再眨两下，把视线引到真正要看的那几爻。
+   动画挂在 .yao 上而不是 .row 上 —— 挂 .row 会跟 yao-in 抢 opacity/transform。 */
+@keyframes dong-pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.row.dong .yao{animation:dong-pulse .46s ease-in-out 2;animation-delay:calc(var(--i) * .42s + .45s)}
+
+/* 摇卦进行中的卦堆：三列（爻位 / 爻画 / 标记），未摇到的位置留虚位。
+   行高压到 26px —— 六行加上铜钱和摇卦键要在一屏里放得下，不然按的那一下
+   得先滚半屏。只有刚落定的那一爻出入场动画，六爻全动就看不出一爻一爻垒的意思了。 */
+.pan.stack .row{grid-template-columns:34px 1fr 32px;height:26px;animation:none}
+.pan.stack .row.pending .nj{color:var(--muted)}
+.pan.stack .row.fresh{animation:yao-in .34s cubic-bezier(.2,.8,.3,1) both}
+.pan.stack .row.dong .yao{animation:none}
+
+/* 手排：整行可点，点一下在这爻的四种状态里循环。比摇卦时的虚位高一些，好点。
+   类名**不能**叫 .pick —— 设置页「点进下一层的行」已经占了那个名字（display:flex +
+   var(--card) 底，源码还在后面），撞上去会把这里的 display:grid 顶掉，
+   中间那条 1fr 的爻画列直接塌成 0 宽，整行只剩爻位和标记（踩过一次）。 */
+.pan.stack .row.pickrow{height:38px;grid-template-columns:52px 1fr 52px;border:1px solid transparent;border-radius:10px;cursor:pointer}
+.pan.stack .row.pickrow:active{background:var(--base);border-color:var(--rule)}
+.row.pickrow .mark{text-align:right;color:var(--muted)}
+.row.pickrow.dong .mark{color:var(--hi)}
+
+/* ══ 动作行 ══ */
+.acts{display:flex;gap:8px;margin-top:14px}
+.acts .toss{width:auto;flex:1;height:44px;border-radius:13px;font-size:14px;letter-spacing:.2em;text-indent:.2em}
+.ghost{
+  flex:none;height:44px;padding:0 18px;border:1px solid var(--rule);border-radius:13px;
+  background:transparent;color:var(--ink-2);font-family:inherit;font-size:12px;
+  line-height:1;letter-spacing:.1em;cursor:pointer;
+}
+.ghost:active{background:var(--card)}
+
+/* ══ 箱体 ══
+   结果页的每一节都是一只独立的箱子：圆角、描边、内边距，彼此之间留白。
+   以前是一条分隔线接着大段滚动，分不清哪里结束哪里开始。 */
+.sec{
+  margin-top:14px;padding:14px 14px 15px;border:1px solid var(--rule);
+  border-radius:16px;background:var(--card);
+}
+.sec-h{font-size:11px;color:var(--muted);letter-spacing:.1em;margin-bottom:10px}
+/* 箱子里的箱子（.guji）不再套一层边，免得两层描边糊成一片 */
+.sec .guji:first-of-type{margin-top:0}
+
+/* ══ 古籍 ══ */
+.guji{
+  margin-top:12px;padding:12px 14px;border-radius:14px;
+  background:linear-gradient(180deg,#16150f,#121210);
+  border:1px solid #2f2b1e;border-left:2px solid var(--lo);
+}
+.guji-h{font-size:10px;color:var(--lo);letter-spacing:.16em;margin-bottom:7px}
+.guji-t{font-size:13px;line-height:2;color:var(--hi);letter-spacing:.02em}
+.guji-s{font-size:11px;line-height:1.85;color:var(--ink-2);margin-top:8px}
+.guji-c{font-size:10px;color:var(--muted);margin-top:8px;letter-spacing:.04em}
+
+/* ══ 设置 ══ */
+.set-g{font-size:11px;color:var(--muted);letter-spacing:.18em;margin:20px 0 10px}
+.set-g:first-child{margin-top:0}
+.srow{margin-bottom:16px}
+.srow-t{font-size:12px;color:var(--ink);margin-bottom:7px;display:flex;align-items:baseline;gap:8px}
+.srow-n{font-size:10px;color:var(--muted);font-weight:400}
+.srow-d{font-size:10px;color:var(--muted);line-height:1.75;margin-top:7px}
+
+.seg{display:flex;gap:2px;background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:2px}
+.seg button{
+  flex:1;height:32px;border:0;border-radius:10px;background:transparent;
+  color:var(--ink-2);font-family:inherit;font-size:11px;font-weight:500;
+  line-height:1;cursor:pointer;letter-spacing:.04em;
+}
+.seg button.on{background:var(--base);color:var(--ink)}
+.seg button:disabled{opacity:.3;cursor:not-allowed}
+
+/* 点进下一层的行 */
+.pick{
+  display:flex;align-items:center;width:100%;height:44px;padding:0 14px;
+  border:1px solid var(--rule);border-radius:12px;background:var(--card);
+  color:var(--ink);font-family:inherit;font-size:13px;line-height:1;
+  cursor:pointer;text-align:left;
+}
+.pick:active{background:var(--base)}
+.pick-v{margin-left:auto;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* 加减器 */
+.step{display:flex;align-items:center;gap:10px}
+.step button{
+  width:44px;height:36px;border:1px solid var(--rule);border-radius:12px;
+  background:var(--card);color:var(--ink);font-size:17px;line-height:1;cursor:pointer;font-family:inherit;
+}
+.step button:active{background:var(--base)}
+.step-v{flex:1;text-align:center;font-size:13px;font-variant-numeric:tabular-nums;letter-spacing:.04em}
+
+/* 带标签的加减器（小六壬手定 / 梅花动爻） */
+.step-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.step-l{width:34px;flex:none;font-size:12px;color:var(--muted)}
+
+/* 选卦：八个八卦格 */
+.gpickgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.gpick{
+  display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;
+  border:1px solid var(--rule);border-radius:11px;background:transparent;
+  color:var(--ink-2);font-family:inherit;line-height:1;cursor:pointer;
+}
+.gpick:active{background:var(--base)}
+.gpick.on{border-color:var(--lo);background:radial-gradient(circle at 50% 30%,#2a2110,#141208);color:var(--hi)}
+.gpick .gp-s{font-size:17px;letter-spacing:.08em}
+.gpick .gp-n{font-size:9px;color:var(--muted)}
+.gpick.on .gp-n{color:var(--hi)}
+
+.reset{
+  width:100%;height:42px;margin-top:22px;border:1px solid var(--rule);border-radius:12px;
+  background:transparent;color:var(--ink-2);font-family:inherit;font-size:12px;
+  line-height:1;letter-spacing:.1em;cursor:pointer;
+}
+.reset:active{background:var(--card)}
+
+/* 城市列表 */
+.city{
+  display:flex;align-items:center;width:100%;height:38px;padding:0 12px;margin-bottom:1px;
+  border:0;border-radius:9px;background:transparent;color:var(--ink-2);
+  font-family:inherit;font-size:12px;line-height:1;cursor:pointer;text-align:left;
+}
+.city:active{background:var(--card)}
+.city.on{background:var(--card);color:var(--ink);font-weight:600}
+.city.on::before{content:"·";color:var(--hi);margin-right:6px;font-weight:700}
+.city-v{margin-left:auto;font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.lonrow{display:flex;gap:8px}
+.lonrow input{
+  flex:1;min-width:0;height:42px;padding:0 14px;border:1px solid var(--rule);border-radius:12px;
+  background:var(--card);color:var(--ink);font-family:inherit;font-size:13px;line-height:1;
+}
+.lonrow input::placeholder{color:var(--muted)}
+.lonrow button{
+  width:72px;height:42px;border:1px solid var(--lo);border-radius:12px;
+  background:radial-gradient(circle at 50% 40%,#2a2110,#141208);color:var(--hi);
+  font-family:inherit;font-size:12px;font-weight:500;line-height:1;cursor:pointer;
+}
+
+/* ══ 数字键盘 ══ */
+.pad-num{
+  font-size:44px;font-weight:600;letter-spacing:.1em;text-align:center;
+  line-height:1.2;margin:10px 0 4px;font-variant-numeric:tabular-nums;
+}
+.pad-ph{font-size:14px;font-weight:400;color:var(--muted);letter-spacing:.1em}
+.chips{display:flex;gap:8px;justify-content:center}
+.chip{
+  padding:6px 14px;border:1px solid var(--rule);border-radius:20px;
+  background:var(--card);color:var(--muted);font-size:11px;letter-spacing:.06em;
+}
+.chip b{color:var(--ink-2);font-weight:600;margin-left:4px;font-variant-numeric:tabular-nums}
+.chip.on{border-color:var(--lo);color:var(--ink)}
+.chip.on b{color:var(--hi)}
+.pad-top{text-align:center;margin-bottom:14px}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pad button{
+  height:52px;border:1px solid var(--rule);border-radius:14px;background:var(--card);
+  color:var(--ink);font-family:inherit;font-size:19px;font-weight:600;line-height:1;cursor:pointer;
+}
+.pad button:active{background:var(--base)}
+.pad button[data-key="del"]{font-size:13px;font-weight:400;color:var(--ink-2)}
+.pad button.ok{
+  border-color:var(--lo);color:var(--hi);
+  background:radial-gradient(circle at 50% 40%,#2a2110,#141208);
+}
+
+/* 首页提示：真太阳时修正 / 临近时辰交界 */
+.now .now-sub{display:block;font-size:10px;color:var(--muted);letter-spacing:.04em;margin-top:5px}
+.now .warn{
+  display:block;font-style:normal;font-size:10px;color:var(--lo);
+  letter-spacing:.04em;margin-top:5px;line-height:1.6;
+}
+
+/* 梅花起卦法名 */
+.mh-fa{font-size:11px;color:var(--muted);letter-spacing:.1em;margin-bottom:9px}
+
+/* 六宫 */
+.gong-name{font-size:30px;font-weight:600;letter-spacing:.12em;margin-bottom:2px}
+.gong-wx{font-size:12px;color:var(--muted);margin-bottom:10px}
+.gong-duan{font-size:12px;color:var(--ink-2);line-height:1.75}
+
+/* 三卦 */
+/* 三卦**竖排**。原先横着并排三个百来像素的格子，「上卦 ☷ 坤」这一行字根本塞不进去，
+   只能画两个挨着的符号 —— 既挤，也看不出哪半是上卦。竖过来每卦占一行就宽敞了，
+   上下卦各占一行、各带自己的标。本卦那两行再挂「体」「用」小标：
+   体用落在哪一半全看上卦下卦，取象就是按这两个字去查的。 */
+.tri{display:flex;flex-direction:column;gap:7px}
+.tri .guarow{padding:9px 11px 8px;border:1px solid var(--rule);border-radius:12px;background:var(--card)}
+.gr-h{display:flex;align-items:baseline;gap:7px;margin-bottom:6px}
+.gr-h .k{font-size:10px;color:var(--muted)}
+.gr-h .v{font-family:var(--kai);font-size:13px;font-weight:400;letter-spacing:.04em}   /* 卦名，同上 */
+.trig{display:flex;align-items:center;gap:8px;height:23px}
+.trig .tt{width:26px;font-size:10px;color:var(--muted)}
+.trig .ts{font-size:16px;line-height:1}
+.trig .tn{font-size:12px;color:var(--ink-2)}
+.trig .tb{margin-left:auto;padding:1px 6px;border-radius:6px;font-size:9px;letter-spacing:.1em}
+.tb-ti{color:var(--hi);border:1px solid var(--lo)}
+.tb-yong{color:var(--muted);border:1px solid var(--rule)}
+
+/* ══ 取象 ══
+   体、用两卦各查一次〈八卦萬物屬類〉（原文见 core/gen/wanwu.js）。
+   那一列在原书里是从头顿号串到尾的，几十个词糊成一片；窄屏上改用「·」当间隔，
+   词与词之间有了呼吸，折行时也不会把上一句的尾巴带到下一行去。
+   `.tb` 的形制沿用三卦那两行的小标 —— 但不写 `.trig .tb` 那条（margin-left:auto
+   是把它推到行尾用的），这里小标在行首。 */
+.xiang{margin-top:13px}
+.xiang-h{display:flex;align-items:baseline;gap:7px;margin-bottom:5px}
+.xiang-h .tb{margin:0;padding:1px 6px;border-radius:6px;font-size:9px;letter-spacing:.1em}
+.xiang-h .xn{font-family:var(--kai);font-size:20px;letter-spacing:.04em}
+.xiang-l{font-size:12px;line-height:2;color:var(--ink-2);letter-spacing:.02em}
+.xiang-l i{font-style:normal;color:var(--base);margin:0 5px}
+
+/* ══ 五行配色 ══
+   木青 火赤 土黄 金白 水黑 —— 水在 OLED 上不能真给黑，取蓝作替身（排盘软件的通行画法）。
+   这五个是**类别色**（每个色代表一个固定身份），所以按类别色的规矩挑，不靠眼睛：
+   跑 dataviz 的验证器校过，暗色带 L 0.48–0.67 全在带内、
+   相邻对最差 deutan ΔE 12.9（≥12 算过线）、对卡面 #1a1a19 的对比度全部 ≥3:1。
+   只有「金」是故意留灰的（彩度 0.03，低于 0.10 的彩度下限）：金=白是惯例，
+   真给它上色就会跟土（黄）或跟本项目的金色强调（--lo / --hi）撞成一团。
+   另外这些颜色只用在**文字**上，而字本身（戊、子…）永远就在颜色旁边，
+   认出来从来不只靠颜色 —— 这正是彩度不够时要求的第二重编码。
+   这五个**必须带 !important**，别摘。它们是 utility 类，(0,1,0) 的性子太软：
+   `.now .sizhu > div > span{color:var(--muted)}`（0,2,2）是后代选择器，连 `<b>` 里那八个
+   干支字一起匹配上了，五行色全军覆没、四柱看上去就是一坨灰（踩过）。
+   这里的颜色是**数据的身份**（这个字属哪一行），不是容器的样式选择，
+   任何容器规则去改它都是错的 —— !important 正是这句话的写法。
+   ⚠ 改这里任何一个色值都要重跑验证器，别凭手感调。 */
+.wx-木{color:#429c5a!important}
+.wx-火{color:#b9473d!important}
+.wx-土{color:#c4804a!important}
+.wx-金{color:#8d8672!important}
+.wx-水{color:#4c88d3!important}
+
+/* ══ ⓘ 弹层 ══ */
+.sheet{
+  position:absolute;inset:0;z-index:20;display:none;
+  /* 不透明：半透明会让底下的页面文字透上来，正文读不清 */
+  background:var(--surface);border-radius:36px;
+  flex-direction:column;
+}
+.sheet.open{display:flex}
+.sheet-bar{height:48px;flex:none;display:flex;align-items:center;padding:0 14px;border-bottom:1px solid var(--rule)}
+.sheet-bar b{font-size:14px;letter-spacing:.08em}
+.sheet-bar button{margin-left:auto;width:32px;height:32px;border:0;border-radius:50%;background:var(--card);color:var(--ink-2);font-size:17px;cursor:pointer}
+.sheet-body{flex:1;overflow-y:auto;padding:16px 18px 24px;scrollbar-width:none}
+.sheet-body::-webkit-scrollbar{display:none}
+.sheet-body h4{font-size:11px;color:var(--lo);letter-spacing:.16em;font-weight:600;margin:16px 0 8px}
+.sheet-body h4:first-child{margin-top:0}
+.sheet-body p{font-size:12px;line-height:1.95;color:var(--ink-2);margin-bottom:8px}
+.sheet-body p b{color:var(--ink);font-weight:600}
+.sheet-body .src{font-size:10px;color:var(--muted);line-height:1.7;margin-top:14px;padding-top:10px;border-top:1px solid var(--rule)}
+
+/* 表冠翻页进度：放在屏幕内右侧，读作滚动条。
+   平时隐藏，只在转表冠时淡入——挂在表壳外面会像一道杂线。 */
+.notch{
+  position:absolute;right:5px;top:64px;bottom:14px;width:3px;z-index:15;
+  border-radius:2px;background:var(--rule);overflow:hidden;
+  opacity:0;transition:opacity .35s;
+}
+.notch.on{opacity:1}
+.notch i{display:block;width:100%;background:var(--hi);border-radius:2px;height:0;transition:height .12s}
+
+/* ══ 底部提示 ══ */
+.tips{
+  font-size:11px;color:var(--muted);letter-spacing:.05em;text-align:center;line-height:1.9;
+  transition:opacity .4s;
+}
+.tips kbd{font:inherit;color:var(--ink-2);background:var(--card);border:1px solid var(--rule);border-radius:5px;padding:1px 6px;margin:0 2px}
+.tips.fade{opacity:.28}

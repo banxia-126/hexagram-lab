@@ -1,0 +1,21 @@
+{
+  "name": "hexagram-lab",
+  "version": "0.1.0",
+  "description": "术数排盘工具：小六壬 · 六爻 · 梅花易数（面向方屏手表的网页 demo）",
+  "scripts": {
+    "test": "node test.mjs"
+  },
+  "keywords": [
+    "小六壬",
+    "六爻",
+    "梅花易数",
+    "术数",
+    "排盘"
+  ],
+  "author": "banxia-126",
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "lunar-javascript": "^1.7.7"
+  }
+}

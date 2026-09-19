@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>术数排演</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="stage">
+  <div class="watch" id="watch">
+    <div class="layers" id="layers"></div>
+
+    <div class="case">
+      <div class="screen" id="screen">
+
+        <!-- 首页 -->
+        <section class="page active" data-page="home">
+          <header class="bar">
+            <span class="bar-title">术数排演</span>
+            <button class="info gear" data-go="settings" title="设置">⚙</button>
+            <button class="info" data-act="info" data-topic="about">i</button>
+          </header>
+          <div class="body">
+            <div class="now" id="now"></div>
+            <nav class="menu">
+              <button class="entry" data-go="liuyao"><b>六爻</b><i>三钱摇卦 · 京房八宫装卦</i></button>
+              <button class="entry" data-go="liuren"><b>小六壬</b><i>六宫掐指</i></button>
+              <button class="entry" data-go="meihua"><b>梅花易数</b><i>时间起卦</i></button>
+            </nav>
+          </div>
+        </section>
+
+        <!-- 六爻 -->
+        <section class="page" data-page="liuyao">
+          <header class="bar">
+            <button class="back" data-go="home">‹</button>
+            <span class="bar-title">六爻</span>
+            <span class="bar-sub" id="liuyao-day"></span>
+            <button class="info" data-act="info" data-topic="liuyao">i</button>
+          </header>
+          <div class="body" id="liuyao-body"></div>
+        </section>
+
+        <!-- 小六壬 -->
+        <section class="page" data-page="liuren">
+          <header class="bar">
+            <button class="back" data-go="home">‹</button>
+            <span class="bar-title">小六壬</span>
+            <button class="info" data-act="info" data-topic="liuren">i</button>
+          </header>
+          <div class="body" id="liuren-body"></div>
+        </section>
+
+        <!-- 梅花易数 -->
+        <section class="page" data-page="meihua">
+          <header class="bar">
+            <button class="back" data-go="home">‹</button>
+            <span class="bar-title">梅花易数</span>
+            <button class="info" data-act="info" data-topic="meihua">i</button>
+          </header>
+          <div class="body" id="meihua-body"></div>
+        </section>
+
+        <!-- 设置 -->
+        <section class="page" data-page="settings">
+          <header class="bar">
+            <button class="back" data-go="home">‹</button>
+            <span class="bar-title">设置</span>
+            <button class="info" data-act="info" data-topic="settings">i</button>
+          </header>
+          <div class="body" id="settings-body"></div>
+        </section>
+
+        <!-- ⓘ 弹层 -->
+        <div class="sheet" id="sheet">
+          <div class="sheet-bar">
+            <b id="sheet-title"></b>
+            <button data-act="close">×</button>
+          </div>
+          <div class="sheet-body" id="sheet-body"></div>
+        </div>
+
+        <div class="notch" id="notch"><i id="notch-fill"></i></div>
+      </div>
+    </div>
+
+    <div class="crown" id="crown" title="拖动表冠滚动本页"></div>
+  </div>
+</div>
+
+<p class="tips" id="tips">
+  <kbd>拖动表体</kbd> 旋转 360°　<kbd>拖动表冠</kbd> 滚动本页　<kbd>点击屏幕</kbd> 回正
+</p>
+
+<script src="core/vendor/lunar.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
