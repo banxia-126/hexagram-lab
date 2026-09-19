@@ -232,7 +232,10 @@ core/settings.js    用户设置的默认值与读写（全项目唯一碰浏览
 core/cities.js      省会/直辖市/港澳台经度表
 core/gen/yijing.js  64 卦卦辞 + 彖 + 大象，每卦六条爻辞 + 小象（由 tools/parse-yijing.mjs 生成）
 core/gen/wanwu.js   八卦万物属类，共 152 条，供梅花取象（由 tools/parse-wanwu.mjs 生成）
-core/vendor/        lunar.js（农历/干支，见下方许可）
+core/vendor/        lunar.js（农历/干支，见下方许可）+ lunar-javascript.LICENSE
+                    + package.json（只有一行 {"type":"commonjs"}，**不能删**：
+                    根 package.json 声明了 "type":"module"，没有它 Node 会把
+                    lunar.js 当 ESM 解析，test.mjs 直接报错）
 tools/parse-yijing.mjs  从公版《易經》文本抽取卦辞 / 彖 / 大象 / 爻辞 / 小象，自带校验
 tools/parse-wanwu.mjs   从《梅花易數·卷一》抽取〈八卦萬物屬類〉，自带校验
 test.mjs            三个引擎 + 时间换算的自校验

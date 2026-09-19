@@ -17,7 +17,10 @@ export const DEFAULTS = {
   lonName: '东经 120°',   // 只用于界面显示
   extraMin: 0,           // 额外时差修正（分钟）。夏令时不需要它，见 core/time.js
 
-  // 梅花起卦：time = 年月日时 / single = 单数 / double = 两数
+  // 梅花起卦：time = 年月日时 / m1 = 方法1（一串数字从中间劈开）/ m2 = 方法2（三个数各管一段）
+  // ⚠ 键名必须和 app.js 设置页写进去的**一模一样**。这里曾写成 single/double，
+  //   而界面写的是 m1/m2，于是下面 load() 的校验全判非法、静默回落 time ——
+  //   表现就是「选了方法1，刷新一下又变回时间起卦」。
   mhMethod: 'time',
   mhAddHour: true,       // 数字起卦是否把时辰计进去
 
@@ -40,7 +43,7 @@ export function load() {
     if (typeof o.lon === 'number' && o.lon >= -180 && o.lon <= 180) out.lon = o.lon;
     if (typeof o.lonName === 'string') out.lonName = o.lonName;
     if (typeof o.extraMin === 'number' && Math.abs(o.extraMin) <= 720) out.extraMin = o.extraMin;
-    if (['time', 'single', 'double'].includes(o.mhMethod)) out.mhMethod = o.mhMethod;
+    if (['time', 'm1', 'm2'].includes(o.mhMethod)) out.mhMethod = o.mhMethod;
     if (typeof o.mhAddHour === 'boolean') out.mhAddHour = o.mhAddHour;
     if (o.lyMethod === 'coin' || o.lyMethod === 'dayan') out.lyMethod = o.lyMethod;
     if (o.lrWuxing === 'shen' || o.lrWuxing === 'liu') out.lrWuxing = o.lrWuxing;

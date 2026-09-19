@@ -496,7 +496,7 @@ body{
 .sheet-body p b{color:var(--ink);font-weight:600}
 .sheet-body .src{font-size:10px;color:var(--muted);line-height:1.7;margin-top:14px;padding-top:10px;border-top:1px solid var(--rule)}
 
-/* 表冠翻页进度：放在屏幕内右侧，读作滚动条。
+/* 表冠滚动进度：放在屏幕内右侧，读作滚动条。
    平时隐藏，只在转表冠时淡入——挂在表壳外面会像一道杂线。 */
 .notch{
   position:absolute;right:5px;top:64px;bottom:14px;width:3px;z-index:15;
@@ -513,3 +513,27 @@ body{
 }
 .tips kbd{font:inherit;color:var(--ink-2);background:var(--card);border:1px solid var(--rule);border-radius:5px;padding:1px 6px;margin:0 2px}
 .tips.fade{opacity:.28}
+
+/* ══ 窄屏：脱掉表壳，屏幕内容直接铺满视口 ══
+   表体是 408 + 2×26 = 460px 宽，加上 body 的 24px 内边距、右侧再探出 13px 表冠，
+   视口窄于约 508px 就开始被切——而 body 是 overflow:hidden，**切掉的部分滚不回来**。
+   390 / 414 / 430 这些手机宽度全中，而短视频引来的观众全在手机上。
+
+   所以窄屏整个放弃「表体」这个视觉概念：厚度层、背壳、表冠全部隐藏，表壳的
+   内边距/圆角/阴影一并抹掉，让 .screen 直接撑满视口，读起来就是个原生 app。
+   代价是看不出「这是个手表应用」——只在窄屏这么做，宽屏仍是完整表体。
+
+   3D 倾斜也一并停掉：壳都没了，再让内容跟着鼠标歪就不成立。
+   .watch 的 transform 是 JS 写的**内联**样式（app.js 里那行 rotateX/rotateY），
+   内联样式压不过普通规则，只有 !important 压得住。
+
+   ⚠ 这段查询约 450 字符，已接近 Lite Wearable 的 512 字符上限。移植到手表时
+   要么拆成两条写，要么整段删掉——手表上本来就该是无壳的。 */
+@media (max-width:520px),(max-height:620px){
+  body{padding:0;gap:0;display:block;background:var(--surface)}
+  .stage{perspective:none;height:100%}
+  .watch{height:100%;transform:none!important;cursor:auto}
+  .layers,.shell-back,.crown{display:none}
+  .case{padding:0;border-radius:0;background:none;box-shadow:none;height:100%}
+  .screen{width:100%;height:100%;border-radius:0;box-shadow:none}
+}

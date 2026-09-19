@@ -1,7 +1,5 @@
 node_modules/
 
-# 调试用临时文件（headless 截图 / 探针），不入库
-_*.html
-_*.js
-_shot/
+# 调试用临时文件（headless 截图 / 探针 / 注入脚本），不入库
+_*
 _cp*/
