@@ -227,13 +227,21 @@ body{
 .gua-name{font-family:var(--kai);font-size:19px;font-weight:400;letter-spacing:.06em}
 .gua-meta{font-size:11px;color:var(--muted)}
 .pan{display:flex;flex-direction:column;gap:1px;border-top:1px solid var(--rule);padding-top:8px}
-.row{display:grid;grid-template-columns:28px 32px 30px 1fr 32px;align-items:center;gap:5px;height:34px}
+/* 六列：六神 / 纳甲（后面可能挂个「空」）/ 六亲 / 爻画 / 爻值 / 世应。
+   爻值是 6 老阴 7 少阳 8 少阴 9 老阳 —— 光看爻画只分得出阴阳，
+   7 和 8 长得一模一样、9 和 7 也一样，而 6/9 是要变爻的，得让数字自己说话。
+   （摇卦中的卦堆另有一套三列，见下面 .pan.stack .row。） */
+.row{display:grid;grid-template-columns:28px 46px 30px 1fr 20px 32px;align-items:center;gap:5px;height:34px}
 .row .shen{font-size:10px;color:var(--muted)}
 .row .nj{font-size:11px;color:var(--ink-2)}
 .row .qin{font-size:11px;color:var(--ink-2)}
-.row .mark{font-size:10px;color:var(--ink-2);text-align:right;white-space:nowrap}
+.row .val{font-size:10px;color:var(--muted);text-align:center}
+/* 「空」是旬空：这一爻的地支落在本旬空亡的两个地支里。跟动/静是两回事，
+   所以它不吃下面 .row.dong 那条变色，自己压住颜色。 */
+.row .kong{font-style:normal;font-size:9px;color:var(--muted)}
 /* 动爻用文字色强调，颜色留给数据本身 */
 .row.dong .nj,.row.dong .qin,.row.dong .mark{color:var(--ink);font-weight:600}
+.row.dong .val{color:var(--ink)}
 .row.dong{border-left:2px solid var(--hi);margin-left:-6px;padding-left:4px}
 
 /* 爻符：阳=一整条，阴=两条中间留缺口 */

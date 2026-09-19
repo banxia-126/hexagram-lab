@@ -619,9 +619,10 @@ function renderLiuyao(vals) {
     const mark = y.世 ? '世' : y.应 ? '应' : '';
     return `<div class="row${y.动 ? ' dong' : ''}" style="--i:${5 - i}">
       <span class="shen">${y.六神}</span>
-      <span class="nj">${wxGZ(y.纳甲)}</span>
+      <span class="nj">${wxGZ(y.纳甲)}${y.空亡 ? '<i class="kong">空</i>' : ''}</span>
       <span class="qin">${y.六亲}</span>
       ${yaoHTML(y.阴阳 === '阳')}
+      <span class="val">${y.值}</span>
       <span class="mark">${mark}${y.动 ? (y.值 === 9 ? '○' : '×') : ''}</span>
     </div>`;
   }).join('');
@@ -642,7 +643,7 @@ function renderLiuyao(vals) {
     <div class="sec">
       <div class="gua-head">
         <span class="gua-name">${p.本卦.卦}</span>
-        <span class="gua-meta">${p.本卦.宫}宫 · ${p.本卦.世应序} · 世${p.本卦.世爻}应${p.本卦.应爻}</span>
+        <span class="gua-meta">${p.本卦.宫}宫 · ${p.本卦.世应序} · 世${p.本卦.世爻}应${p.本卦.应爻} · 旬空${p.空亡.join('')}</span>
       </div>
       <div class="pan">${rows}</div>
       ${p.变卦
@@ -854,7 +855,8 @@ function renderMeihuaResult(m) {
 
     <div class="sec">
       <div class="sec-h">《周易》原文</div>
-      ${j ? guji(`本卦 卦辞 · 第 ${j.序} 卦`, esc(j.卦辞), `彖曰：${esc(j.彖)}`) : ''}
+      ${j ? guji(`本卦 卦辞 · 第 ${j.序} 卦`, esc(j.卦辞), `彖曰：${esc(j.彖)}`)
+          + guji('本卦 大象', `象曰：${esc(j.大象)}`) : ''}
       ${src ? guji(`动爻 第 ${m.动爻} 爻 · ${src.题}`, esc(src.辞), `象曰：${esc(src.象)}`) : ''}
       ${jb ? guji(`变卦 ${jb.序} · ${m.变卦.名}`, esc(jb.卦辞), `象曰：${esc(jb.大象)}`) : ''}
       <p class="hint" style="margin-top:8px">《周易》原文 · 繁体 · 据 Project Gutenberg 公版《易經》</p>
@@ -922,7 +924,8 @@ const TOPICS = {
       <p>六十四卦的宫属和世爻是<b>推</b>出来的：本宫 → 一世（变初爻）→ 二世 → 三世 →
       四世 → 五世 → 游魂（五世再变四爻）→ 归魂（游魂内卦全变）。
       世爻依次落在 <b>6, 1, 2, 3, 4, 5, 4, 3</b> 爻，应爻取世爻 ±3。</p>
-      <p>六亲由卦宫五行与纳甲地支五行生克定；六神按日干起。可跑 <b>node test.mjs</b> 用乾宫八卦自校验。</p>
+      <p>六亲由卦宫五行与纳甲地支五行生克定；六神按日干起；旬空是本旬轮空的两个地支，
+      由日干支推，落在哪一爻就在那一爻的纳甲后标个「空」。可跑 <b>node test.mjs</b> 用乾宫八卦自校验。</p>
       <h4>原文</h4>
       <p>结果页按顺序给出：本卦卦辞与彖传、大象辞，<b>每一个动爻的爻辞与小象</b>，
       以及变卦的卦辞与大象辞。六爻真正要看的正是动爻那几爻的爻辞。</p>` + SRCNET,
